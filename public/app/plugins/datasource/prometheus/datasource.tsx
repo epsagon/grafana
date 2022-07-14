@@ -1017,18 +1017,20 @@ export class PrometheusDatasource
 
   async areExemplarsAvailable() {
     try {
-      const url = this.getResourcePath('/api/v1/query_exemplars');
+      const url = '/api/v1/query_exemplars';
       const params = {
         query: 'test',
-        start: dateTime().subtract(30, 'minutes').valueOf(),
-        end: dateTime().valueOf(),
+        start: dateTime().subtract(30, 'minutes').valueOf().toString(),
+        end: dateTime().valueOf().toString(),
       };
-      // Avoid alerting the user if this test fails
-      const testRequest = {
-        showErrorAlert: false,
-        hideFromInspector: true,
-      };
-      const res = await lastValueFrom(getBackendSrv().fetch({ url, params, ...testRequest }));
+      const res = await lastValueFrom(
+        this._request<PromDataSuccessResponse<PromExemplarData>>(url, params, {
+          method: 'GET',
+          // Avoid alerting the user if this test fails
+          hideFromInspector: true,
+          showErrorAlert: false,
+        })
+      );
       if (res.data.status === 'success') {
         return true;
       }

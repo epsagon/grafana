@@ -237,6 +237,7 @@ export class PrometheusDatasource
       this._request<T>(`/api/datasources/${this.id}/resources${url}`, params, {
         method: 'GET',
         hideFromInspector: true,
+        showErrorAlert: false,
       })
     ); // toPromise until we change getTagValues, getTagKeys to Observable
   }
@@ -1016,11 +1017,18 @@ export class PrometheusDatasource
 
   async areExemplarsAvailable() {
     try {
-      const res = await this.getResource('/api/v1/query_exemplars', {
+      const url = this.getResourcePath('/api/v1/query_exemplars');
+      const params = {
         query: 'test',
         start: dateTime().subtract(30, 'minutes').valueOf(),
         end: dateTime().valueOf(),
-      });
+      };
+      // Avoid alerting the user if this test fails
+      const testRequest = {
+        showErrorAlert: false,
+        hideFromInspector: true,
+      };
+      const res = await lastValueFrom(getBackendSrv().fetch({ url, params, ...testRequest }));
       if (res.data.status === 'success') {
         return true;
       }
